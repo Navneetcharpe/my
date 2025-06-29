@@ -1,2 +1,2 @@
 # my
-django project
+django project my project
