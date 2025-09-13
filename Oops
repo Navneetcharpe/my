@@ -1,0 +1,100 @@
+# -----------------------------
+# First Class: 'student'
+# -----------------------------
+
+class student:
+    def __init__(self):  # default constructor (no parameters other than 'self')
+        pass             # 'pass' means do nothing. This class has no functionality.
+
+# Create an object of the first 'student' class
+s1 = student()   # This calls the default constructor, object created successfully.
+
+
+
+# -----------------------------
+# Second Class: 'student' (redefined)
+# -----------------------------
+# NOTE: This re-defines the class 'student'. The earlier definition is replaced.
+
+class student:
+    college = "holkar"   # Class attribute (shared by all objects of this class)
+
+    def __init__(self, name, marks, roll):  # Parameterized constructor
+        # Instance attributes (different for each object)
+        self.myname = name     
+        self.mark = marks
+        self.rollno = roll
+        print("call the class function")  # Executes when object is created
+
+    def welcome(self):   # Instance method
+        # 'self' is the current object
+        print('my name is', self.myname)
+
+    def get_marks(self): # Instance method returning marks
+        return self.mark
+
+
+# Create object s2
+s2 = student("nav", 9.8, 34)   # Constructor runs & prints message
+s2.welcome()                   # Calls welcome() → "my name is nav"
+print(s2.get_marks())          # Calls get_marks() → returns 9.8
+print(s2.myname, s2.mark, s2.rollno)  # Access instance variables → nav 9.8 34
+
+# Create another object s3
+s3 = student("ram", 4.6, 33)   # Constructor runs & prints message
+print(s3.myname, s3.mark, s3.rollno)  # Prints → ram 4.6 33
+
+# Access class attribute using object
+print(s2.college)   # All objects share 'college' = "holkar"
+
+
+
+# -----------------------------
+# Class vs Instance Attributes Example
+# -----------------------------
+
+class students:
+    def __init__(self, name, marks):   # Constructor with parameters
+        self.name = name               # Instance attribute
+        self.marks = marks             # Instance attribute (list of marks)
+
+    def get_avg(self):   # Method to calculate average
+        sum = 0
+        for val in self.marks:     # Loop through list of marks
+            sum += val             # Add marks one by one
+            # This print is inside the loop, so it prints average at every step
+            print("hi", self.name, "your avg is", sum / 3)
+
+
+# Create an object with marks list
+s5 = students('nav', [47, 63, 78])
+
+# Call method to calculate average
+s5.get_avg()
+# Prints:
+# hi nav your avg is 15.666...
+# hi nav your avg is 36.666...
+# hi nav your avg is 62.666...
+# (Notice: it prints 3 times because of loop. Ideally, final print should be outside loop)
+
+
+
+# -----------------------------
+# Static Method Example
+# -----------------------------
+
+class my:
+    @staticmethod      # Decorator → defines static method (does not need 'self' or 'cls')
+    def college():
+        print("holkar")   # Belongs to the class, not to a specific object
+
+
+# Call static method directly without creating object
+my.college()    # Prints: holkar
+
+# OR call with object
+obj = my()
+obj.college()   # Prints: holkar (works same, but not recommended)
+
+
+
