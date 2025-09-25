@@ -1,0 +1,66 @@
+It is a Tea Inventory API 🫖.
+You can add, update, view, and delete teas (like a small database of teas).
+
+Basically:
+
+GET → See teas
+
+POST → Add new tea
+
+PUT → Update tea info
+
+DELETE → Remove tea
+
+
+# pydantic (ai data validation library)
+# Uvicorn
+# typing module ( core )
+# decoraters
+from fastapi import FastAPI
+from pydantic import BaseModel
+from typing import List
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
+
+
+app = FastAPI()
+
+
+
+class tea(BaseModel):
+    id : int
+    name : str
+    origin : str
+
+teas : List[tea] =[]
+
+@app.get("/")
+def read_root():
+    return{"message":"welcome my office"}
+
+@app.get("/teas")
+def get_teas():
+  return teas
+
+@app.post("/teas")
+def add_tea(tea: tea):
+    teas.append(tea)
+    return tea
+
+@app.put("/teas/{tea_id}")
+def update_tea(tea_id: int , updated_tea : tea ):
+    for index,tea in enumerate(teas):
+        if tea.id == tea_id:
+          teas[index] = update_tea
+          return update_tea
+    return{"error":"tea not found"}
+
+@app.delete("/teas/{tea_id}")
+def delete_tea(tea_id : int ):
+    for index, tea in enumerate(teas):
+        if tea.id == tea_id:
+           deleted = teas.pop(index)
+           return deleted
+    return {"error": "tea not found"}
