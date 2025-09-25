@@ -1,0 +1,96 @@
+
+# chat bot 
+
+import streamlit as st
+from langgraph.graph import StateGraph, START, END
+from langchain_google_genai import ChatGoogleGenerativeAI
+from typing import TypedDict
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Initialize LLM
+llm = ChatGoogleGenerativeAI(
+    model="gemini-2.0-flash",
+    api_key="AIzaSyDdVzQI8LsLEFaQEWucH5pNk5nZYI9OEVg"  # or load from env
+)
+
+# --- Define State ---
+class BlogState(TypedDict):
+    title: str
+    outline: str
+    content: str
+    rating: int
+
+# --- Node 1: Create Outline ---
+def create_outline(state: BlogState) -> BlogState:
+    title = state["title"]
+    prompt = f"Generate an outline for a blog on the topic: {title}"
+    outline = llm.invoke(prompt).content
+    state["outline"] = outline
+    return state
+
+# --- Node 2: Create Blog ---
+def create_Blog(state: BlogState) -> BlogState:
+    title = state["title"]
+    outline = state["outline"]
+    prompt = f"Write a detailed blog on the title '{title}' using the following outline: {outline}"
+    content = llm.invoke(prompt).content
+    state["content"] = content
+    return state
+
+# --- Node 3: Evaluate Blog ---
+def create_evaluate(state: BlogState) -> BlogState:
+    blog_content = state["content"]
+    prompt = f"Rate the following blog content on a scale of 1 to 10. Only return the integer rating:\n\n{blog_content}"
+    rating_str = llm.invoke(prompt).content.strip()
+    
+    try:
+        state["rating"] = int(rating_str)
+    except ValueError:
+        state["rating"] = 0  # fallback if LLM doesn't return a valid number
+    return state
+
+# --- Build Graph ---
+graph = StateGraph(BlogState)
+
+# Nodes
+graph.add_node("create_outline", create_outline)
+graph.add_node("create_Blog", create_Blog)
+graph.add_node("create_evaluate", create_evaluate)
+
+# Edges
+graph.add_edge(START, "create_outline")
+graph.add_edge("create_outline", "create_Blog")
+graph.add_edge("create_Blog", "create_evaluate")
+graph.add_edge("create_evaluate", END)
+
+# Compile workflow
+workflow = graph.compile()
+
+# --- Run workflow ---
+#result = workflow.invoke({"title": "rise of ai in india"})
+#print("Outline:\n", result["outline"])
+#print("\nEvaluation Rating:", result["rating"])
+# print("\nContent:\n", result["content"])
+
+st.title("📝 AI Blog Generator with Evaluation")
+
+title_input = st.text_input("Enter your blog title:", "rise of ai in india")
+
+if st.button("Generate Blog"):
+    with st.spinner("Generating blog..."):
+        result = workflow.invoke({"title": title_input})
+
+    st.subheader("📑 Outline")
+    st.write(result["outline"])
+
+    st.subheader("📝 Blog Content")
+    st.write(result["content"])
+
+    st.subheader("⭐ Evaluation Rating")
+    st.metric("Score", result["rating"])
+
+
+
+
