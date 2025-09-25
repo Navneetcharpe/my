@@ -1,0 +1,86 @@
+# email summarizer for insterview
+
+
+import os
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import JsonOutputParser
+from pydantic import BaseModel, Field
+
+# Set API Key
+os.environ["GOOGLE_API_KEY"] = "AIzaSyDOhlcF6po_OI1mYhCGX9a7fuHaUOJ6uOU"
+
+# Step 1: Define the Pydantic model for structured output
+class ResumeSchema(BaseModel):
+    total_experience: str = Field(description="Total years of professional experience")
+    experience_in_ai: str = Field(description="Years of experience in AI/ML specifically")
+    location: str = Field(description="Current city and state or country")
+    phone_number: str = Field(description="Contact phone number")
+    skills: str = Field(description="Relevant technical skills or courses")
+    experience: str = Field(description="Professional work experience details")
+    project: str = Field(description="AI/ML related project information")
+    internship: str = Field(description="Internship experience")
+    internship_projects: str = Field(description="Projects completed during internship")
+
+# Step 2: Create a JSON output parser from the model
+output_parser = JsonOutputParser(pydantic_schema=ResumeSchema)
+
+format_instructions = output_parser.get_format_instructions()
+
+# Step 3: Prompt template
+prompt = ChatPromptTemplate.from_template(
+    "Extract the following fields from the resume below:\n"
+    "{format_instructions}\n\n"
+    "Resume:\n{resume}"
+).partial(format_instructions=format_instructions)
+
+# Step 4: Set up the Gemini model
+model = ChatGoogleGenerativeAI(
+    model="gemini-1.5-flash",
+    temperature=0
+)
+
+# Step 5: Create chain
+chain = prompt | model | output_parser
+
+# Step 6: Resume content
+resume_content = """
+📄 RESUME
+Name: Rahul Verma
+Phone: +91-9876543210
+Email: rahul.verma.ai@gmail.com
+Location: Bangalore, Karnataka, India
+LinkedIn: linkedin.com/in/rahulverma-ai
+GitHub: github.com/rahulverma-ai
+
+Professional Summary:
+AI/ML Engineer with 6 years of total industry experience, including 3 years of specialized work in Artificial Intelligence and Machine Learning. Adept at designing and deploying end-to-end AI solutions using Python, TensorFlow, PyTorch, and cloud platforms. Proven expertise in NLP, Computer Vision, predictive modeling, and deep learning.
+
+Skills:
+Programming: Python, Java, SQL, Bash
+AI/ML Frameworks: TensorFlow, Keras, PyTorch, Scikit-learn
+
+Work Experience:
+AI/ML Engineer – TechNova Solutions – Bangalore, India (Feb 2022 – Present)
+Data Analyst – InfoEdge Technologies – Bangalore, India (Jan 2019 – Jan 2022)
+Software Engineer – NetSys Pvt. Ltd – Pune, India (Jul 2017 – Dec 2018)
+
+Education:
+B.Tech in Computer Science – NIT Nagpur – 2017 – CGPA: 8.2/10
+
+Certifications:
+TensorFlow Developer Certificate – Google (2023)
+AWS Certified Machine Learning – Specialty (2022)
+Deep Learning Specialization – Coursera (Andrew Ng)
+
+Projects:
+Resume Parser using NLP
+Chatbot for E-commerce Support
+"""
+
+# Step 7: Invoke the chain
+summary = chain.invoke({"resume": resume_content})
+
+# Step 8: Print output
+print("Resume Summary Output:\n")
+print(summary)
