@@ -1,0 +1,50 @@
+#langgraph + gemmini QA chatbot
+
+
+
+import streamlit as st
+from langgraph.graph import StateGraph, START, END
+from langchain_google_genai import ChatGoogleGenerativeAI
+from typing import TypedDict
+from dotenv import load_dotenv
+
+# Load env variables
+load_dotenv()
+
+# Initialize LLM
+llm = ChatGoogleGenerativeAI(
+    model="gemini-2.0-flash",
+    api_key="AIzaSyDdVzQI8LsLEFaQEWucH5pNk5nZYI9OEVg"  # or load from env
+)
+
+# Define state
+class LLMState(TypedDict):
+    question: str
+    answer: str
+
+# Node function
+def llm_Q(state: LLMState) -> LLMState:
+    question = state["question"]
+    prompt = f"Answer the following question: {question}"
+    answer = llm.invoke(prompt).content
+    state["answer"] = answer
+    return state
+
+# Build graph
+graph = StateGraph(LLMState)
+graph.add_node("llm_Q", llm_Q)
+graph.add_edge(START, "llm_Q")
+graph.add_edge("llm_Q", END)
+workflow = graph.compile()
+
+# Streamlit app
+st.title("🤖 LangGraph with Gemini Question Answer ChatBot")
+
+question = st.text_input("Ask me anything:")
+
+if st.button("Get Answer"):
+    if question.strip():
+        result = workflow.invoke({"question": question})
+        st.success(result["answer"])
+    else:
+        st.warning("Please enter a question first!")
