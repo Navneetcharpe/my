@@ -1,0 +1,86 @@
+It is a Resume Information Extractor 📝🤖 using Google Gemini AI.
+
+Purpose:
+
+Take a resume as plain text
+
+Automatically extract structured information:
+
+Full name
+
+Contact info (email, phone)
+
+Education history
+
+Work experience
+
+
+
+from langchain.output_parsers import StructuredOutputParser, ResponseSchema
+from langchain.prompts import PromptTemplate
+from langchain_google_genai import GoogleGenerativeAI
+
+import json
+import os
+
+# Set API key
+os.environ["OPENAI_API_KEY"] = "AIzaSyDOhlcF6po_OI1mYhCGX9a7fuHaUOJ6uOU"
+
+# Define schema — make nested fields return as JSON string
+response_schemas = [
+    ResponseSchema(name="name", description="Full name of the candidate"),
+    ResponseSchema(name="contact", description="Contact info as JSON"),
+    ResponseSchema(name="education", description="Education history as JSON array"),
+    ResponseSchema(name="experience", description="Work experience as JSON array"),
+]
+
+parser = StructuredOutputParser.from_response_schemas(response_schemas)
+
+# Prompt
+prompt = PromptTemplate(
+    template="Extract structured resume info from the following resume text:\n{resume_text}\n{format_instructions}",
+    input_variables=["resume_text"],
+    partial_variables={"format_instructions": parser.get_format_instructions()}
+)
+
+resume_text = """
+John Doe
+Email: john@example.com
+Phone: 123-456-7890
+
+Education:
+- B.Tech from ABC University, 2020
+
+Experience:
+- Software Engineer at XYZ Corp for 2 years
+"""
+model = GoogleGenerativeAI(
+                model="gemini-2.0-flash",
+               temperature = 0 ,
+               google_api_key = "AIzaSyDOhlcF6po_OI1mYhCGX9a7fuHaUOJ6uOU"
+)
+# Format the prompt
+formatted_prompt = prompt.format(resume_text="A résumé or resume (or alternatively resumé),[a][1] is a document created and used by a person to present their background, skills, and accomplishments. Résumés can be used for a variety of reasons, but most often are used to secure new jobs, whether in the same organization or another.[2]A typical résumé contains a summary of relevant job experience and education. The résumé is usually one of the first items, along with a cover letter and sometimes an application for employment, a potential employer sees regarding the job seeker and is used to screen applicants before offering an interview.")
+
+# Call the LLM
+llm = GoogleGenerativeAI(temperature=0, model="gemini-2.0-flash" )
+response = llm.invoke(formatted_prompt)
+
+# Parse the response (top-level)
+parsed = parser.parse(response)
+
+# Parse nested fields
+contact_info = json.loads(parsed["contact"])
+education = json.loads(parsed["education"])
+experience = json.loads(parsed["experience"])
+
+# Access inside data
+email = contact_info["email"]
+degree = education[0]["degree"]
+company = experience[0]["company"]
+
+# Output
+print("Name:", parsed["name"])
+print("Email:", email)
+print("Degree:", degree)
+print("Company:", company)
