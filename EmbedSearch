@@ -1,0 +1,38 @@
+# Make understanding from text → The code takes your sentences (like “She visited the market”) and converts them into numbers (embeddings) that capture their meaning.
+
+# Save them in memory → These embeddings are stored inside a FAISS database, which is good at finding which sentences are most similar in meaning.
+
+# Ask a question → When you ask something (like “What do cats like to do?”), the code also turns your question into numbers and compares it with stored sentences to find the closest match.
+
+
+import os
+os.environ["GOOGLE_API_KEY"] = "AIzaSyDOhlcF6po_OI1mYhCGX9a7fuHaUOJ6uOU"
+
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_community.vectorstores import FAISS
+from langchain.schema import Document
+documents = [
+    Document(page_content="She visited the market."),
+    Document(page_content="She  went shopping."),
+    Document(page_content="She made a trip to the market."),
+]
+
+embeddings = GoogleGenerativeAIEmbeddings
+
+vectorstore = FAISS.from_documents(documents,GoogleGenerativeAIEmbeddings (model="models/embedding-001"))
+
+# 4. Define a query
+query = "What do cats like to do?"
+
+# 5. Perform a similarity search
+# This will convert the query into an embedding and find the most similar documents.
+results = vectorstore.similarity_search(query)
+
+for result in results:
+    print(result.page_content)
+
+'''embedding = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+sentence =" my name is nav"
+embeddings = embedding.embed_query(sentence)
+print(embeddings)
+'''
